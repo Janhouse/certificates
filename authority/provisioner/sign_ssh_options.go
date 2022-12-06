@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"math/big"
-	"strings"
 	"time"
 
 	"github.com/pkg/errors"
@@ -112,9 +111,6 @@ func (o SignSSHOptions) ModifyValidity(cert *ssh.Certificate) error {
 func (o SignSSHOptions) match(got SignSSHOptions) error {
 	if o.CertType != "" && got.CertType != "" && o.CertType != got.CertType {
 		return errs.Forbidden("ssh certificate type does not match - got %v, want %v", got.CertType, o.CertType)
-	}
-	if len(o.Principals) > 0 && len(got.Principals) > 0 && !containsAllMembers(o.Principals, got.Principals) {
-		return errs.Forbidden("ssh certificate principals does not match - got %v, want %v", got.Principals, o.Principals)
 	}
 	if !o.ValidAfter.IsZero() && !got.ValidAfter.IsZero() && !o.ValidAfter.Equal(&got.ValidAfter) {
 		return errs.Forbidden("ssh certificate validAfter does not match - got %v, want %v", got.ValidAfter, o.ValidAfter)
@@ -329,8 +325,6 @@ func (v *sshCertOptionsRequireValidator) Valid(got SignSSHOptions) error {
 		return errs.BadRequest("ssh certificate certType cannot be empty")
 	case v.KeyID && got.KeyID == "":
 		return errs.BadRequest("ssh certificate keyID cannot be empty")
-	case v.Principals && len(got.Principals) == 0:
-		return errs.BadRequest("ssh certificate principals cannot be empty")
 	default:
 		return nil
 	}
@@ -503,24 +497,6 @@ func sshCertTypeUInt32(ct string) uint32 {
 	default:
 		return 0
 	}
-}
-
-// containsAllMembers reports whether all members of subgroup are within group.
-func containsAllMembers(group, subgroup []string) bool {
-	lg, lsg := len(group), len(subgroup)
-	if lsg > lg || (lg > 0 && lsg == 0) {
-		return false
-	}
-	visit := make(map[string]struct{}, lg)
-	for i := 0; i < lg; i++ {
-		visit[strings.ToLower(group[i])] = struct{}{}
-	}
-	for i := 0; i < lsg; i++ {
-		if _, ok := visit[strings.ToLower(subgroup[i])]; !ok {
-			return false
-		}
-	}
-	return true
 }
 
 func sshParseString(in []byte) (out, rest []byte, ok bool) {

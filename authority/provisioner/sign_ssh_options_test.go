@@ -125,13 +125,6 @@ func TestSSHOptions_Match(t *testing.T) {
 				err: errors.Errorf("ssh certificate type does not match - got bar, want foo"),
 			}
 		},
-		"fail/pricipals": func() test {
-			return test{
-				so:  SignSSHOptions{Principals: []string{"foo"}},
-				cmp: SignSSHOptions{Principals: []string{"bar"}},
-				err: errors.Errorf("ssh certificate principals does not match - got [bar], want [foo]"),
-			}
-		},
 		"fail/validAfter": func() test {
 			return test{
 				so:  SignSSHOptions{ValidAfter: NewTimeDuration(time.Now().Add(1 * time.Minute))},
