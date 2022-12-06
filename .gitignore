@@ -6,6 +6,9 @@
 *.so
 *.dylib
 
+# Jetbrains ide
+*.iml
+
 # Go Workspaces
 go.work
 go.work.sum
