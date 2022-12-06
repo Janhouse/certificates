@@ -5,6 +5,7 @@ import (
 	"crypto/x509"
 	"encoding/base64"
 	"encoding/json"
+	"go.step.sm/crypto/sshutil"
 	"net/http"
 	"time"
 
@@ -289,6 +290,11 @@ func SSHSign(w http.ResponseWriter, r *http.Request) {
 
 	ctx := provisioner.NewContextWithMethod(r.Context(), provisioner.SSHSignMethod)
 	ctx = provisioner.NewContextWithToken(ctx, body.OTT)
+
+	if body.CertType == "host" {
+		ctx = provisioner.NewContextWithCertType(ctx, sshutil.HostCert)
+		ctx = provisioner.NewContextWithHostname(ctx, body.KeyID)
+	}
 
 	a := mustAuthority(ctx)
 	signOpts, err := a.Authorize(ctx, body.OTT)

@@ -2,6 +2,7 @@ package provisioner
 
 import (
 	"context"
+	"go.step.sm/crypto/sshutil"
 )
 
 // Method indicates the action to action that we will perform, it's used as part
@@ -73,4 +74,30 @@ func NewContextWithToken(ctx context.Context, token string) context.Context {
 func TokenFromContext(ctx context.Context) (string, bool) {
 	token, ok := ctx.Value(tokenKey{}).(string)
 	return token, ok
+}
+
+type certType struct{}
+
+// NewContextWithCertType creates a new context with the requested cert type.
+func NewContextWithCertType(ctx context.Context, ct sshutil.CertType) context.Context {
+	return context.WithValue(ctx, certType{}, ct)
+}
+
+// CertTypeFromContext returns the cert type stored in the given context.
+func CertTypeFromContext(ctx context.Context) sshutil.CertType {
+	ct, _ := ctx.Value(certType{}).(sshutil.CertType)
+	return ct
+}
+
+type hostname struct{}
+
+// NewContextWithHostname creates a new context with the requested hostname.
+func NewContextWithHostname(ctx context.Context, hn string) context.Context {
+	return context.WithValue(ctx, hostname{}, hn)
+}
+
+// CertTypeFromContext returns the hostname stored in the given context.
+func HostnameFromContext(ctx context.Context) string {
+	hn, _ := ctx.Value(hostname{}).(string)
+	return hn
 }

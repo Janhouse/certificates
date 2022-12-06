@@ -387,9 +387,15 @@ func (o *OIDC) AuthorizeSSHSign(ctx context.Context, token string) ([]SignOption
 	var data sshutil.TemplateData
 	var principals []string
 
+	// Allow creating host cert if oidc user is in admin list
+	var ct sshutil.CertType = sshutil.UserCert
+	if CertTypeFromContext(ctx) == sshutil.HostCert && claims.IsAdmin(o.Admins) {
+		ct = CertTypeFromContext(ctx)
+	}
+
 	if claims.Email == "" {
 		// If email is empty, use the Subject claim instead to create minimal data for the template to use
-		data = sshutil.CreateTemplateData(sshutil.UserCert, claims.Subject, nil)
+		data = sshutil.CreateTemplateData(ct, claims.Subject, nil)
 		if v, err := unsafeParseSigned(token); err == nil {
 			data.SetToken(v)
 		}
@@ -404,8 +410,17 @@ func (o *OIDC) AuthorizeSSHSign(ctx context.Context, token string) ([]SignOption
 			return nil, errs.Wrap(http.StatusInternalServerError, err, "oidc.AuthorizeSSHSign")
 		}
 
+		var keyId = claims.Email
+		principals = iden.Usernames
+
+		// Set host certificate principals and key-id to host parameter
+		if CertTypeFromContext(ctx) == sshutil.HostCert && claims.IsAdmin(o.Admins) {
+			keyId = HostnameFromContext(ctx)
+			principals = []string{keyId}
+		}
+
 		// Certificate templates.
-		data = sshutil.CreateTemplateData(sshutil.UserCert, claims.Email, iden.Usernames)
+		data = sshutil.CreateTemplateData(ct, keyId, principals)
 		if v, err := unsafeParseSigned(token); err == nil {
 			data.SetToken(v)
 		}
@@ -417,8 +432,6 @@ func (o *OIDC) AuthorizeSSHSign(ctx context.Context, token string) ([]SignOption
 		for k, v := range iden.Permissions.CriticalOptions {
 			data.AddCriticalOption(k, v)
 		}
-
-		principals = iden.Usernames
 	}
 
 	// Use the default template unless no-templates are configured and email is
