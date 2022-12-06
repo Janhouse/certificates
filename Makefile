@@ -85,6 +85,8 @@ endif
 
 DATE    := $(shell date -u '+%Y-%m-%d %H:%M UTC')
 LDFLAGS := -ldflags='-w -X "main.Version=$(VERSION)" -X "main.BuildTime=$(DATE)"'
+# Debug
+#LDFLAGS := -ldflags='-X "main.Version=$(VERSION)" -X "main.BuildTime=$(DATE)"'
 GOFLAGS := CGO_ENABLED=0
 
 download:
