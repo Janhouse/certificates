@@ -1,5 +1,8 @@
 FROM golang:alpine AS builder
 
+# Build Delve
+#RUN go install github.com/go-delve/delve/cmd/dlv@latest
+
 WORKDIR /src
 COPY . .
 
@@ -13,7 +16,7 @@ FROM smallstep/step-cli:latest
 
 COPY --from=builder /src/bin/step-ca /usr/local/bin/step-ca
 COPY --from=kms /usr/local/bin/step-kms-plugin /usr/local/bin/step-kms-plugin
-
+#COPY --from=builder /go/bin/dlv /
 USER step
 
 ENV CONFIGPATH="/home/step/config/ca.json"
@@ -27,3 +30,4 @@ COPY docker/entrypoint.sh /entrypoint.sh
 
 ENTRYPOINT ["/bin/bash", "/entrypoint.sh"]
 CMD exec /usr/local/bin/step-ca --password-file $PWDPATH $CONFIGPATH
+#CMD exec /dlv --listen=:40000 --headless=true --api-version=2 --accept-multiclient exec /usr/local/bin/step-ca -- --password-file $PWDPATH $CONFIGPATH
